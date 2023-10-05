@@ -27,14 +27,29 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
-
   const { users } = await ListUsersService({});
 
   if (users.length >= Number(process.env.USER_LIMIT)) {
-    throw new AppError("ERR_NO_PERMISSION", 403);
+    throw new AppError("ERR_USER_CREATION_COUNT", 403);
   }
 
-  const { email, password, name, profile, queueIds, whatsappId } = req.body;
+  const {
+    email,
+    password,
+    name,
+    profile,
+    queueIds,
+    whatsappId,
+    allHistoric,
+    isRemoveTags,
+    startWork,
+    endWork,
+    viewConection,
+    viewSector,
+    viewName,
+    viewTags,
+    allTicket,
+  } = req.body;
 
   if (
     req.url === "/signup" &&
@@ -51,7 +66,16 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     name,
     profile,
     queueIds,
-    whatsappId
+    whatsappId,
+    allHistoric,
+    isRemoveTags,
+    startWork,
+    endWork,
+    viewConection,
+    viewSector,
+    viewName,
+    viewTags,
+    allTicket,
   });
 
   const io = getIO();
@@ -75,11 +99,19 @@ export const update = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  if (req.user.profile !== "admin" && req.user.profile !== "user") {
+  const { userId } = req.params;
+
+  const newUserId = userId.toString();
+  const sessionUserId = req.user.id.toString();
+
+  if (req.user.profile !== "admin" && sessionUserId !== newUserId) {
     throw new AppError("ERR_NO_PERMISSION", 403);
   }
 
-  const { userId } = req.params;
+  if (process.env.DEMO === "ON") {
+    throw new AppError("ERR_NO_PERMISSION", 403);
+  }
+
   const userData = req.body;
 
   const user = await UpdateUserService({ userData, userId });
@@ -100,6 +132,10 @@ export const remove = async (
   const { userId } = req.params;
 
   if (req.user.profile !== "admin") {
+    throw new AppError("ERR_NO_PERMISSION", 403);
+  }
+
+  if (process.env.DEMO === "ON") {
     throw new AppError("ERR_NO_PERMISSION", 403);
   }
 

@@ -16,10 +16,11 @@ const useStyles = makeStyles(theme => ({
 	},
 	cardTitle: {
 		fontSize: '18px',
+		color: theme.palette.text.primary
 	},
 	cardSubtitle: {
 		color: grey[600],
-		fontSize: '14px',
+		fontSize: '14px'
 	}
 }));
 

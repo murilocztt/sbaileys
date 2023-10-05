@@ -1,4 +1,4 @@
-import TicketTraking from "../../models/TicketTracking";
+import TicketTracking from "../../models/TicketTracking";
 
 interface Params {
   ticketId: string | number;
@@ -6,24 +6,24 @@ interface Params {
   userId?: string | number;
 }
 
-const FindOrCreateATicketTrakingService = async ({
+const FindOrCreateATicketTrackingService = async ({
   ticketId,
   whatsappId,
   userId
-  }: Params): Promise<TicketTraking > => {
+  }: Params): Promise<TicketTracking > => {
 
-  const ticketTraking = await TicketTraking.findOne({
+  const ticketTracking = await TicketTracking.findOne({
     where: {
       ticketId,
       finishedAt: null
     }
   });
 
-  if (ticketTraking) {
-    return ticketTraking;
+  if (ticketTracking) {
+    return ticketTracking;
   }
 
-  const newRecord = await TicketTraking.create({
+  const newRecord = await TicketTracking.create({
     ticketId,
     whatsappId,
     userId
@@ -32,4 +32,4 @@ const FindOrCreateATicketTrakingService = async ({
   return newRecord;
 };
 
-export default FindOrCreateATicketTrakingService;
+export default FindOrCreateATicketTrackingService;

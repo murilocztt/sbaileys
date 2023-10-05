@@ -80,6 +80,18 @@ class Ticket extends Model<Ticket> {
   @Column
   queueId: number;
 
+  @Default(false)
+  @Column
+  fromMe: boolean;
+
+  @Default(false)
+  @Column
+  isMsgGroup: boolean;
+
+  @Default(false)
+  @Column
+  isFinished: boolean;
+
   @BelongsTo(() => Queue)
   queue: Queue;
 

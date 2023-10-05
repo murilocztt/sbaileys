@@ -14,20 +14,6 @@ import GetProfilePicUrl from "../services/WbotServices/GetProfilePicUrl";
 import SendWhatsAppMedia from "../services/WbotServices/SendWhatsAppMedia";
 import SendWhatsAppMessage from "../services/WbotServices/SendWhatsAppMessage";
 import UpdateTicketService from "../services/TicketServices/UpdateTicketService";
-import ListSettingsServiceOne from "../services/SettingServices/ListSettingsServiceOne";
-import ListQueuesService from "../services/QueueService/ListQueuesService";
-
-type UserData = {
-  userId: number;
-}
-
-type TagData = {
-  tagsId: number;
-}
-
-type QueueData = {
-  queueId: number;
-}
 
 type WhatsappData = {
   whatsappId: number;
@@ -45,9 +31,6 @@ interface ContactData {
 }
 
 const createContact = async (
-  userId: number | 0,
-  tagsId: number | 0,
-  queueId: number | 0,
   whatsappId: number | undefined,
   newContact: string
 ) => {
@@ -79,23 +62,13 @@ const createContact = async (
       throw new AppError(`whatsapp #${whatsappId} not found`);
     }
   }
- 
+  
   const createTicket = await FindOrCreateTicketService({
     whatsappId: whatsapp.id,
     contact,
     unreadMessages: 0,
     channel: "whatsapp"
   });
-  
-  // const createTicket = await FindOrCreateTicketService(
-  //   whatsappId: whatsapp.id,
-  //   contact,
-  //   unreadMessages: 0,
-  //   queueId,
-  //   tagsId,
-  //   userId,
-  //   channel: "whatsapp"
-  // );
 
   const ticket = await ShowTicketService(createTicket.id);
 
@@ -107,9 +80,6 @@ const createContact = async (
 export const index = async (req: Request, res: Response): Promise<Response> => {
   const newContact: ContactData = req.body;
   const { whatsappId }: WhatsappData = req.body;
-  const { queueId }: QueueData = req.body;
-  const { tagsId }: TagData = req.body;
-  const { userId }: UserData = req.body;
   const { body, quotedMsg }: MessageData = req.body;
   const medias = req.files as Express.Multer.File[];
 
@@ -126,37 +96,24 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
   } catch (err: any) {
     throw new AppError(err.message);
   }
-  console.log("entrou api controler: " + body)
-  
-  const contactAndTicket = await createContact(userId, tagsId, queueId, whatsappId, newContact.number);
 
-  let resp: any;
+  const contactAndTicket = await createContact(whatsappId, newContact.number);
 
   if (medias) {
     await Promise.all(
       medias.map(async (media: Express.Multer.File) => {
-        resp = await SendWhatsAppMedia({ body, media, ticket: contactAndTicket });
+        await SendWhatsAppMedia({ body, media, ticket: contactAndTicket });
       })
     );
   } else {
-    resp = await SendWhatsAppMessage({ body, ticket: contactAndTicket, quotedMsg });
+    await SendWhatsAppMessage({ body, ticket: contactAndTicket, quotedMsg });
   }
 
-  const listSettingsService = await ListSettingsServiceOne({ key: "closeTicketApi" });
-  var closeTicketApi = listSettingsService?.value;
-
-  if (closeTicketApi === 'enabled') {
-    setTimeout(async () => {
-      await UpdateTicketService({
-        ticketId: contactAndTicket.id,
-        ticketData: { status: "closed" }
-      });
-    }, 1000);
-  }
-  return res.send({ error: resp });
-};
-
-export const list = async (req: Request, res: Response): Promise<Response> => {
-  const queues = await ListQueuesService();
-  return res.status(200).json(queues);
+  setTimeout(async () => {
+    await UpdateTicketService({
+      ticketId: contactAndTicket.id,
+      ticketData: { status: "closed" }
+    });
+  }, 1000);
+  return res.send({ error: "SUCCESS" });
 };
